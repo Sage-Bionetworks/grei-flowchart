@@ -103,6 +103,7 @@
   .legend-swatch { width: 14px; height: 14px; border-radius: 3px; border: 1px solid rgba(0,0,0,0.15); }
 
   .container { max-width: 1200px; margin: 0 auto; padding: 2rem 1rem; }
+  body.chatbot-open .container { max-width: 1400px; }
 
   .flow-section { display: flex; flex-direction: column; align-items: center; gap: 0; }
 
@@ -169,7 +170,7 @@
   .connector .label-no { background: #fadbd8; color: #e74c3c; }
 
   .branch-container { display: flex; gap: 2rem; width: 100%; max-width: 900px; justify-content: center; align-items: flex-start; }
-  .branch { display: flex; flex-direction: column; align-items: center; flex: 1; max-width: 400px; }
+  .branch { display: flex; flex-direction: column; align-items: center; flex: 1; max-width: 400px; transition: opacity 0.4s ease, filter 0.4s ease; }
   .branch-label { font-size: 0.8rem; font-weight: 700; padding: 4px 12px; border-radius: 12px; margin-bottom: 0.5rem; }
   .branch-label-yes { background: #d4efdf; color: #1e8449; }
   .branch-label-no { background: #fadbd8; color: #c0392b; }
@@ -257,54 +258,248 @@
   .dt-wrapper table.dataTable tbody td:first-child { font-weight: 700; color: #2c3e50; }
   .dt-wrapper .dt-search input { border: 1px solid #bdc3c7; border-radius: 4px; padding: 0.3rem 0.6rem; }
 
-  /* Wizard */
-  .wizard-overlay {
-    display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0;
-    background: rgba(0,0,0,0.6); z-index: 200; justify-content: center; align-items: center;
-  }
-  .wizard-overlay.active { display: flex; }
-  .wizard-card {
-    background: white; border-radius: 12px; box-shadow: 0 8px 32px rgba(0,0,0,0.3);
-    max-width: 600px; width: 90%; overflow: hidden; animation: wizardIn 0.3s ease;
-  }
-  @keyframes wizardIn { from { transform: scale(0.9); opacity: 0; } to { transform: scale(1); opacity: 1; } }
-  .wizard-card .wizard-header { padding: 1.5rem; color: white; text-align: center; }
-  .wizard-card .wizard-header h2 { font-size: 1.1rem; }
-  .wizard-card .wizard-header .step-indicator { font-size: 0.8rem; opacity: 0.8; margin-top: 0.3rem; }
-  .wizard-body { padding: 1.5rem; }
-  .wizard-body p { font-size: 0.9rem; color: #555; margin-bottom: 1rem; text-align: center; }
-  .wizard-actions { display: flex; gap: 0.75rem; justify-content: center; flex-wrap: wrap; }
-  .wizard-actions button {
-    padding: 0.6rem 1.5rem; border: 2px solid #ddd; background: white; border-radius: var(--radius);
-    cursor: pointer; font-size: 0.9rem; transition: var(--transition); color: #2c3e50;
-  }
-  .wizard-actions button:hover { border-color: var(--colour-start); background: var(--colour-start); color: white; }
-  .wizard-actions button.btn-yes { border-color: var(--colour-action); }
-  .wizard-actions button.btn-yes:hover { background: var(--colour-action); border-color: var(--colour-action); }
-  .wizard-actions button.btn-no { border-color: var(--colour-sensitive); }
-  .wizard-actions button.btn-no:hover { background: var(--colour-sensitive); border-color: var(--colour-sensitive); }
-  .wizard-footer {
-    padding: 1rem 1.5rem; background: #f9f9f9; border-top: 1px solid #eee;
-    display: flex; justify-content: space-between; align-items: center;
-  }
-  .wizard-footer button {
-    padding: 0.4rem 1rem; border: 1px solid #bdc3c7; background: white;
-    border-radius: 20px; cursor: pointer; font-size: 0.8rem; transition: var(--transition); color: #555;
-  }
-  .wizard-footer button:hover { background: #ecf0f1; }
+  /* ============================
+     Chatbot Wizard
+     ============================ */
 
-  .wizard-answers {
-    margin-top: 1rem; padding: 1rem; background: #f8f9fa; border-radius: var(--radius);
-    border: 1px solid #e0e0e0; text-align: left; max-height: 300px; overflow-y: auto;
+  .start-row {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    width: 100%;
+    max-width: 780px;
+    justify-content: center;
   }
-  .wizard-answers h4 { font-size: 0.85rem; color: #2c3e50; margin-bottom: 0.5rem; }
-  .wizard-answer-row {
-    display: flex; justify-content: space-between; align-items: baseline;
-    padding: 0.3rem 0; border-bottom: 1px solid #eee; font-size: 0.8rem;
+  .start-row > .node { flex: 0 1 600px; }
+
+  .chatbot-fab {
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.6rem 1rem;
+    background: linear-gradient(135deg, var(--colour-info), var(--colour-start));
+    color: white;
+    border: none;
+    border-radius: 24px;
+    cursor: pointer;
+    font-size: 0.8rem;
+    font-weight: 600;
+    box-shadow: var(--shadow-hover);
+    transition: var(--transition);
+    white-space: nowrap;
   }
-  .wizard-answer-row:last-child { border-bottom: none; }
-  .wizard-answer-q { color: #888; flex: 1; }
-  .wizard-answer-a { color: #2c3e50; font-weight: 600; flex: 1; text-align: right; }
+  .chatbot-fab:hover { transform: scale(1.05); box-shadow: 0 6px 20px rgba(0,0,0,0.25); }
+  .chatbot-fab .fab-icon { font-size: 1.2rem; }
+
+  #chatbot-panel {
+    position: fixed;
+    right: -420px;
+    top: 90px;
+    width: 400px;
+    max-height: calc(100vh - 110px);
+    background: white;
+    box-shadow: -4px 0 24px rgba(0,0,0,0.15);
+    border-radius: var(--radius) 0 0 var(--radius);
+    z-index: 150;
+    transition: right 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+  #chatbot-panel.open { right: 0; }
+
+  .cb-header {
+    padding: 0.75rem 1rem;
+    background: linear-gradient(135deg, var(--colour-start), #2c3e50);
+    color: white;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-shrink: 0;
+  }
+  .cb-header h3 { font-size: 0.9rem; font-weight: 600; }
+  .cb-header-actions { display: flex; gap: 0.5rem; }
+  .cb-header button {
+    background: none; border: none; color: white; font-size: 0.85rem;
+    cursor: pointer; opacity: 0.8; padding: 2px 6px; border-radius: 4px;
+    transition: var(--transition);
+  }
+  .cb-header button:hover { opacity: 1; background: rgba(255,255,255,0.15); }
+
+  .cb-messages {
+    flex: 1;
+    overflow-y: auto;
+    padding: 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+    scroll-behavior: smooth;
+  }
+
+  .cb-msg {
+    max-width: 88%;
+    padding: 0.6rem 0.85rem;
+    border-radius: 14px;
+    font-size: 0.82rem;
+    line-height: 1.55;
+    animation: cbMsgIn 0.3s ease;
+  }
+  @keyframes cbMsgIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .cb-bot {
+    background: #f0f3f7;
+    color: #2c3e50;
+    align-self: flex-start;
+    border-bottom-left-radius: 4px;
+  }
+  .cb-user {
+    background: var(--colour-start);
+    color: white;
+    align-self: flex-end;
+    border-bottom-right-radius: 4px;
+    font-weight: 500;
+  }
+
+  .cb-help-toggle {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 18px; height: 18px;
+    border-radius: 50%;
+    background: #bdc3c7;
+    color: white;
+    font-size: 0.6rem;
+    font-weight: 700;
+    cursor: pointer;
+    margin-left: 4px;
+    vertical-align: middle;
+    transition: var(--transition);
+    border: none;
+    line-height: 1;
+  }
+  .cb-help-toggle:hover { background: var(--colour-info); }
+
+  .cb-help-box {
+    margin-top: 0.5rem;
+    padding: 0.5rem 0.7rem;
+    background: #ebf5fb;
+    border-left: 3px solid var(--colour-info);
+    border-radius: 0 6px 6px 0;
+    font-size: 0.75rem;
+    color: #555;
+    line-height: 1.5;
+    display: none;
+  }
+  .cb-help-box.visible { display: block; }
+
+  .cb-options {
+    padding: 0.4rem 1rem 0.75rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+    flex-shrink: 0;
+  }
+  .cb-opt {
+    padding: 0.5rem 0.75rem;
+    border: 1.5px solid #ddd;
+    background: white;
+    border-radius: 20px;
+    cursor: pointer;
+    font-size: 0.8rem;
+    transition: var(--transition);
+    text-align: left;
+    color: #2c3e50;
+  }
+  .cb-opt:hover {
+    border-color: var(--colour-start);
+    background: var(--colour-start);
+    color: white;
+  }
+  .cb-opt-yes { border-color: #d4efdf; }
+  .cb-opt-yes:hover { background: var(--colour-action); border-color: var(--colour-action); }
+  .cb-opt-no { border-color: #fadbd8; }
+  .cb-opt-no:hover { background: var(--colour-sensitive); border-color: var(--colour-sensitive); }
+
+  .cb-summary {
+    padding: 0.75rem 1rem;
+    margin: 0 1rem 0.75rem;
+    background: #f8f9fa;
+    border-radius: var(--radius);
+    border: 1px solid #e0e0e0;
+  }
+  .cb-summary h4 { font-size: 0.8rem; color: #2c3e50; margin-bottom: 0.4rem; }
+  .cb-summary-row {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.75rem;
+    padding: 0.2rem 0;
+    border-bottom: 1px solid #f0f0f0;
+  }
+  .cb-summary-row:last-child { border-bottom: none; }
+  .cb-summary-q { color: #888; }
+  .cb-summary-a { font-weight: 600; color: #2c3e50; }
+
+  .cb-recommend-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+    margin-top: 0.6rem;
+  }
+  .cb-repo-tag {
+    padding: 0.35rem 0.7rem;
+    border-radius: 14px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    cursor: pointer;
+    border: 1.5px solid;
+    background: white;
+    transition: var(--transition);
+  }
+  .cb-repo-tag:hover { transform: scale(1.05); box-shadow: 0 2px 8px rgba(0,0,0,0.15); }
+
+  .cb-actions-bar {
+    padding: 0.5rem 1rem 0.75rem;
+    display: flex;
+    gap: 0.5rem;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+  .cb-actions-bar button {
+    padding: 0.4rem 1rem;
+    border: 1px solid #bdc3c7;
+    background: white;
+    border-radius: 20px;
+    cursor: pointer;
+    font-size: 0.8rem;
+    transition: var(--transition);
+    color: #555;
+  }
+  .cb-actions-bar button:hover { background: #ecf0f1; }
+
+  /* Flowchart wizard highlighting */
+  .wiz-highlighting .flow-section > * {
+    transition: opacity 0.5s ease, filter 0.5s ease;
+    opacity: 0.2;
+    filter: grayscale(0.4);
+  }
+  .wiz-highlighting .flow-section > .wiz-on {
+    opacity: 1;
+    filter: none;
+  }
+  .wiz-highlighting .flow-section > .wiz-on.node {
+    box-shadow: 0 0 0 3px rgba(39, 174, 96, 0.3), var(--shadow);
+  }
+  .wiz-highlighting .branch-container.wiz-on { opacity: 1; filter: none; }
+  .wiz-highlighting .branch-container.wiz-on > .branch {
+    opacity: 0.2; filter: grayscale(0.4);
+    transition: opacity 0.5s ease, filter 0.5s ease;
+  }
+  .wiz-highlighting .branch-container.wiz-on > .branch.wiz-on {
+    opacity: 1; filter: none;
+  }
 
   .tooltip {
     position: absolute; background: #2c3e50; color: white; padding: 0.5rem 0.75rem;
@@ -327,13 +522,16 @@
   @media print {
     .header { position: static; }
     .controls, .legend { display: none; }
-    .wizard-overlay { display: none !important; }
+    #chatbot-panel { display: none !important; }
+    .chatbot-fab { display: none !important; }
     .node:hover { transform: none; box-shadow: var(--shadow); }
   }
   @media (max-width: 768px) {
     .header h1 { font-size: 1.3rem; }
     .branch-container { flex-direction: column; align-items: center; }
     .node { max-width: 100%; }
+    .start-row { flex-direction: column; gap: 0.5rem; }
+    #chatbot-panel { width: 100%; right: -100%; border-radius: 0; top: 0; max-height: 100vh; }
   }
 </style>
 </head>
@@ -344,13 +542,13 @@
 <div class="header">
   <h1>GREI Repository Selection Flowchart</h1>
   <p class="subtitle">Generalist Repository Ecosystem Initiative: A decision guide for selecting the right NIH-supported generalist repository for your research data</p>
-  <p class="meta">Version 3.1 | Last updated: 15 May 2026 | Source: NIH Office of Data Science Strategy</p>
+  <p class="meta">Version 3.2 | Last updated: 15 May 2026 | Source: NIH Office of Data Science Strategy</p>
 </div>
 
 <div class="controls" id="nav-controls">
   <button class="active" onclick="showView('flowchart', this)">Decision Flowchart</button>
   <button onclick="showView('repositories', this)">Repository Comparison</button>
-  <button onclick="startWizard()">Interactive Wizard</button>
+  <button onclick="openChatbot()">Interactive Wizard</button>
   <button onclick="showView('features', this)">Shared Features</button>
 </div>
 
@@ -370,20 +568,25 @@
 
   <!-- ======= FLOWCHART VIEW ======= -->
   <div id="view-flowchart">
-    <div class="flow-section">
+    <div class="flow-section" id="flow-section">
 
-      <div class="node node-start" data-tooltip="Begin the GREI repository selection process." onclick="toggleDetail(this)">
-        <span class="node-id">1</span>
-        <h3>START</h3>
-        <p>Select a generalist repository for your NIH-funded research data</p>
-        <div class="detail-panel">
-          <h4>Background</h4>
-          <ul>
-            <li>The NIH Data Management and Sharing (DMS) Policy (effective January 2023) requires all NIH-funded researchers to share scientific data</li>
-            <li>GREI supports eight generalist repositories to provide broad, discipline-agnostic data sharing options</li>
-            <li>Discipline-specific repositories are preferred when available; generalist repositories serve as a universal fallback</li>
-          </ul>
+      <div class="start-row">
+        <div class="node node-start" data-tooltip="Begin the GREI repository selection process." onclick="toggleDetail(this)">
+          <span class="node-id">1</span>
+          <h3>START</h3>
+          <p>Select a generalist repository for your NIH-funded research data</p>
+          <div class="detail-panel">
+            <h4>Background</h4>
+            <ul>
+              <li>The NIH Data Management and Sharing (DMS) Policy (effective January 2023) requires all NIH-funded researchers to share scientific data</li>
+              <li>GREI supports eight generalist repositories to provide broad, discipline-agnostic data sharing options</li>
+              <li>Discipline-specific repositories are preferred when available; generalist repositories serve as a universal fallback</li>
+            </ul>
+          </div>
         </div>
+        <button class="chatbot-fab" onclick="openChatbot()">
+          <span class="fab-icon">🤖</span> Guide Me
+        </button>
       </div>
 
       <div class="connector"><div class="line"></div><div class="arrow"></div></div>
@@ -696,23 +899,18 @@
 
 </div>
 
-<!-- Interactive Wizard Overlay -->
-<div class="wizard-overlay" id="wizard-overlay">
-  <div class="wizard-card">
-    <div class="wizard-header" id="wizard-header">
-      <h2 id="wizard-title">Repository Selection Wizard</h2>
-      <div class="step-indicator" id="wizard-step">Step 1 of 7</div>
-    </div>
-    <div class="wizard-body">
-      <p id="wizard-question"></p>
-      <div class="wizard-actions" id="wizard-actions"></div>
-      <div id="wizard-answers-container"></div>
-    </div>
-    <div class="wizard-footer">
-      <button onclick="wizardBack()">Back</button>
-      <button onclick="closeWizard()">Close</button>
+<!-- Chatbot Panel -->
+<div id="chatbot-panel">
+  <div class="cb-header">
+    <h3>🤖 Repository Selection Assistant</h3>
+    <div class="cb-header-actions">
+      <button onclick="resetChatbot()" title="Start over">↺</button>
+      <button onclick="closeChatbot()" title="Close">✕</button>
     </div>
   </div>
+  <div class="cb-messages" id="cb-messages"></div>
+  <div id="cb-options-area"></div>
+  <div id="cb-summary-area"></div>
 </div>
 
 <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
@@ -883,6 +1081,9 @@ const comparisonRows = [
   { feature: 'Research environment', key: 'researchEnv', render: v => v ? '<span class="cell-yes">Yes</span>' : '<span class="cell-no">No</span>' }
 ];
 
+// ============================
+// View Management
+// ============================
 function showView(view, btn) {
   document.getElementById('view-flowchart').style.display = view === 'flowchart' ? 'block' : 'none';
   document.getElementById('view-repositories').style.display = view === 'repositories' ? 'block' : 'none';
@@ -901,6 +1102,7 @@ function showView(view, btn) {
 }
 
 function goToRepo(repoId) {
+  closeChatbot();
   showView('repositories');
   renderRepoComparison();
   setTimeout(() => {
@@ -934,6 +1136,7 @@ function toggleDetail(el) {
   if (panel) panel.classList.toggle('open');
 }
 
+// Tooltips
 document.addEventListener('mouseover', function(e) {
   const node = e.target.closest('[data-tooltip]');
   if (node) {
@@ -950,6 +1153,9 @@ document.addEventListener('mouseout', function(e) {
   if (e.target.closest('[data-tooltip]')) document.getElementById('tooltip').classList.remove('visible');
 });
 
+// ============================
+// Repository Comparison Table
+// ============================
 let repoComparisonRendered = false;
 function renderRepoComparison() {
   if (repoComparisonRendered) return;
@@ -979,6 +1185,9 @@ function renderRepoComparison() {
   });
 }
 
+// ============================
+// Features DataTable
+// ============================
 let featuresTableRendered = false;
 function renderFeaturesTable() {
   if (featuresTableRendered) return;
@@ -1007,42 +1216,49 @@ function renderFeaturesTable() {
 }
 
 // ============================
-// Interactive Wizard
+// Chatbot Wizard
 // ============================
-const wizardSteps = [
+const cbSteps = [
   {
     title: 'Discipline-Specific Repository',
     question: 'Is there a designated or discipline-specific repository recommended for your data type?',
-    colour: '#2c3e50',
+    help: 'Review your NIH Funding Opportunity Announcement (FOA) for specific repository requirements. Common examples include GenBank for nucleotide sequences, PDB for protein structures, and dbGaP for controlled-access human genomic data. Consult the NIH Scientific Data Sharing website or ask your institutional library.',
+    flowNodes: ['2'],
+    flowBranch: '2',
     options: [
-      { text: 'Yes, there is', action: 'result', result: 'Use your discipline-specific repository (e.g., GenBank, PDB, dbGaP). This is the preferred path under NIH policy.', repos: [] },
-      { text: 'No, I need a generalist repository', action: 'next' },
-      { text: 'I am not sure', action: 'next' }
+      { text: 'Yes, there is', action: 'result', branchSide: 'yes', result: 'Use your discipline-specific repository (e.g., GenBank, PDB, dbGaP). This is the preferred path under NIH policy.', repos: [] },
+      { text: 'No, I need a generalist repository', action: 'next', branchSide: 'no' },
+      { text: 'I am not sure', action: 'next', branchSide: 'no' }
     ]
   },
   {
     title: 'Institutional Repository',
     question: 'Does your institution have its own data repository, or a membership with a generalist repository?',
-    colour: '#2980b9',
+    help: 'Many institutions host their own Dataverse installation, have a Figshare for Institutions membership, or list a preferred repository in their data management policies. Contact your institutional library, research data services, or IT department to find out.',
+    flowNodes: ['3'],
+    flowBranch: '3',
     options: [
-      { text: 'Yes, we have one', action: 'result', result: 'Use your institution\'s repository. Verify it meets NIH DMS Policy requirements for persistent identifiers, metadata, and access.', repos: [] },
-      { text: 'No', action: 'next' },
-      { text: 'I am not sure', action: 'next' }
+      { text: 'Yes, we have one', action: 'result', branchSide: 'yes', result: 'Use your institution\'s repository. Verify it meets NIH DMS Policy requirements for persistent identifiers, metadata, and access.', repos: [] },
+      { text: 'No', action: 'next', branchSide: 'no' },
+      { text: 'I am not sure', action: 'next', branchSide: 'no' }
     ]
   },
   {
     title: 'Sensitive Data',
     question: 'Does your dataset contain human subjects, clinical trial, PHI, or PII data?',
-    colour: '#e74c3c',
+    help: 'This includes data collected from human participants, individual-level clinical trial data, Protected Health Information (PHI) covered under HIPAA, and Personally Identifiable Information (PII). Data must be de-identified or anonymised before deposit in most generalist repositories.',
+    flowNodes: ['4'],
+    flowBranch: '4',
     options: [
-      { text: 'Yes, it contains sensitive data', action: 'next', filter: 'sensitive' },
-      { text: 'No', action: 'next', filter: 'nonsensitive' }
+      { text: 'Yes, it contains sensitive data', action: 'next', filter: 'sensitive', branchSide: 'yes' },
+      { text: 'No', action: 'next', filter: 'nonsensitive', branchSide: 'no' }
     ]
   },
   {
     title: 'Managed Access',
     question: 'Does your data require managed (restricted) access controls?',
-    colour: '#f39c12',
+    help: 'Pre-publication embargo (delaying public access until paper publication) is supported by all eight repositories. User-managed access lets you control who can download your data. Repository-managed access (such as Synapse ACT or Vivli IRP) adds governance oversight for sensitive datasets.',
+    flowNodes: ['5', '6'],
     options: [
       { text: 'Yes, managed access is needed', action: 'next', filter: 'managed' },
       { text: 'Embargo only (pre-publication)', action: 'next', filter: 'embargo' },
@@ -1052,7 +1268,8 @@ const wizardSteps = [
   {
     title: 'Storage Requirements',
     question: 'How large is your dataset?',
-    colour: '#d35400',
+    help: 'Free tiers vary significantly. Most repositories support datasets under 50 GB at no cost. For datasets over 1 TB, consider Synapse (service plans available), Figshare+ (one-time fee for up to 10 TB+), or Harvard Dataverse (1 TB per researcher).',
+    flowNodes: ['7'],
     options: [
       { text: 'Less than 10 GB', action: 'next', filter: 'small' },
       { text: '10 GB to 100 GB', action: 'next', filter: 'medium' },
@@ -1063,7 +1280,8 @@ const wizardSteps = [
   {
     title: 'Cost Preference',
     question: 'Are you able to pay for data deposit and storage services?',
-    colour: '#7d3c98',
+    help: 'Free options include Harvard Dataverse, Zenodo, OSF, and Mendeley Data. Dryad charges $150 per submission but this is often covered by institutional membership. Vivli charges $4,000 to $10,000 but waives fees for member organisations.',
+    flowNodes: ['8'],
     options: [
       { text: 'Must be free', action: 'next', filter: 'free' },
       { text: 'Budget available', action: 'next', filter: 'paid' },
@@ -1073,7 +1291,8 @@ const wizardSteps = [
   {
     title: 'Curation Support',
     question: 'What level of curation support do you need?',
-    colour: '#16a085',
+    help: 'Self-service means you upload data and add metadata yourself using the repository\'s forms. Deposit moderation means repository staff review your submission for quality and completeness (offered by Harvard Dataverse, Dryad, and Figshare). Full curation provides comprehensive data management support including metadata enhancement.',
+    flowNodes: ['9', '10', 'E'],
     options: [
       { text: 'Self-service deposit is fine', action: 'recommend' },
       { text: 'I want deposit moderation', action: 'recommend' },
@@ -1082,97 +1301,135 @@ const wizardSteps = [
   }
 ];
 
-let wizardState = { step: 0, filters: {}, history: [], answers: [] };
+let cb = { step: 0, filters: {}, answers: [], history: [], active: false };
 
-function startWizard() {
-  wizardState = { step: 0, filters: {}, history: [], answers: [] };
-  document.getElementById('wizard-overlay').classList.add('active');
-  renderWizardStep();
+function openChatbot() {
+  showView('flowchart');
+  document.querySelectorAll('#nav-controls button').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('#nav-controls button')[0].classList.add('active');
+
+  document.getElementById('chatbot-panel').classList.add('open');
+  document.body.classList.add('chatbot-open');
+  cb = { step: 0, filters: {}, answers: [], history: [], active: true };
+  document.getElementById('cb-messages').innerHTML = '';
+  document.getElementById('cb-options-area').innerHTML = '';
+  document.getElementById('cb-summary-area').innerHTML = '';
+
+  addBotMsg('Welcome! I\'ll help you find the right GREI repository for your research data. Let\'s work through a few questions.');
+  setTimeout(() => renderCbStep(), 400);
+
+  applyHighlighting();
 }
 
-function closeWizard() {
-  document.getElementById('wizard-overlay').classList.remove('active');
+function closeChatbot() {
+  document.getElementById('chatbot-panel').classList.remove('open');
+  document.body.classList.remove('chatbot-open');
+  cb.active = false;
+  clearHighlighting();
 }
 
-function wizardBack() {
-  if (wizardState.history.length > 0) {
-    const prev = wizardState.history.pop();
-    wizardState.step = prev.step;
-    wizardState.filters = { ...prev.filters };
-    wizardState.answers = [...prev.answers];
-    renderWizardStep();
+function resetChatbot() {
+  cb = { step: 0, filters: {}, answers: [], history: [], active: true };
+  document.getElementById('cb-messages').innerHTML = '';
+  document.getElementById('cb-options-area').innerHTML = '';
+  document.getElementById('cb-summary-area').innerHTML = '';
+
+  addBotMsg('Let\'s start over. I\'ll help you find the right repository.');
+  setTimeout(() => renderCbStep(), 400);
+  applyHighlighting();
+}
+
+function addBotMsg(text, helpText) {
+  const msgs = document.getElementById('cb-messages');
+  const div = document.createElement('div');
+  div.className = 'cb-msg cb-bot';
+
+  let html = text;
+  if (helpText) {
+    const helpId = 'help-' + Date.now();
+    html += ` <button class="cb-help-toggle" onclick="toggleHelp('${helpId}')" title="More information">?</button>`;
+    html += `<div class="cb-help-box" id="${helpId}">${helpText}</div>`;
   }
+  div.innerHTML = html;
+  msgs.appendChild(div);
+  msgs.scrollTop = msgs.scrollHeight;
 }
 
-function renderWizardStep() {
-  const step = wizardSteps[wizardState.step];
-  document.getElementById('wizard-header').style.background = step.colour;
-  document.getElementById('wizard-title').textContent = step.title;
-  document.getElementById('wizard-step').textContent = `Step ${wizardState.step + 1} of ${wizardSteps.length}`;
-  document.getElementById('wizard-question').textContent = step.question;
-  document.getElementById('wizard-answers-container').innerHTML = '';
-
-  const actions = document.getElementById('wizard-actions');
-  actions.innerHTML = '';
-  step.options.forEach(opt => {
-    const btn = document.createElement('button');
-    btn.textContent = opt.text;
-    if (opt.text.toLowerCase().includes('yes')) btn.className = 'btn-yes';
-    if (opt.text.toLowerCase().startsWith('no')) btn.className = 'btn-no';
-    btn.onclick = () => handleWizardChoice(opt);
-    actions.appendChild(btn);
-  });
+function addUserMsg(text) {
+  const msgs = document.getElementById('cb-messages');
+  const div = document.createElement('div');
+  div.className = 'cb-msg cb-user';
+  div.textContent = text;
+  msgs.appendChild(div);
+  msgs.scrollTop = msgs.scrollHeight;
 }
 
-function handleWizardChoice(option) {
-  const step = wizardSteps[wizardState.step];
+function toggleHelp(id) {
+  document.getElementById(id).classList.toggle('visible');
+}
 
-  wizardState.history.push({
-    step: wizardState.step,
-    filters: { ...wizardState.filters },
-    answers: [...wizardState.answers]
+function renderCbStep() {
+  const step = cbSteps[cb.step];
+  addBotMsg(step.question, step.help);
+
+  const area = document.getElementById('cb-options-area');
+  let html = '<div class="cb-options">';
+  step.options.forEach((opt, i) => {
+    let cls = 'cb-opt';
+    if (opt.text.toLowerCase().includes('yes')) cls += ' cb-opt-yes';
+    if (opt.text.toLowerCase().startsWith('no')) cls += ' cb-opt-no';
+    html += `<button class="${cls}" onclick="handleCbChoice(${i})">${opt.text}</button>`;
   });
+  html += '</div>';
+  area.innerHTML = html;
 
-  wizardState.answers.push({ question: step.title, answer: option.text });
+  document.getElementById('cb-messages').scrollTop = document.getElementById('cb-messages').scrollHeight;
+}
 
-  if (option.filter) {
-    wizardState.filters[step.title] = option.filter;
-  }
+function handleCbChoice(optIdx) {
+  const step = cbSteps[cb.step];
+  const opt = step.options[optIdx];
 
-  if (option.action === 'result') {
-    showWizardResult(option.result, option.repos);
-  } else if (option.action === 'recommend') {
-    const recommended = calculateRecommendation();
-    showWizardResult('Based on your requirements, the following repositories are recommended:', recommended);
+  cb.history.push({ step: cb.step, filters: { ...cb.filters }, answers: [...cb.answers] });
+  cb.answers.push({ question: step.title, answer: opt.text });
+  if (opt.filter) cb.filters[step.title] = opt.filter;
+
+  addUserMsg(opt.text);
+  document.getElementById('cb-options-area').innerHTML = '';
+
+  highlightStep(cb.step, opt.branchSide);
+
+  if (opt.action === 'result') {
+    setTimeout(() => showCbResult(opt.result, opt.repos), 500);
+  } else if (opt.action === 'recommend') {
+    const recommended = calculateRec();
+    setTimeout(() => showCbResult('Based on your requirements, here are my recommendations:', recommended), 500);
   } else {
-    wizardState.step++;
-    renderWizardStep();
+    cb.step++;
+    setTimeout(() => renderCbStep(), 500);
   }
 }
 
-function calculateRecommendation() {
+function calculateRec() {
   let candidates = [...repos];
-  const f = wizardState.filters;
+  const f = cb.filters;
 
   if (f['Sensitive Data'] === 'sensitive') {
     candidates = candidates.filter(r => r.managedAccess !== 'None (CC0, public only)');
     candidates.sort((a, b) => {
-      const aHuman = a.humanData !== 'Not supported' ? 1 : 0;
-      const bHuman = b.humanData !== 'Not supported' ? 1 : 0;
-      return bHuman - aHuman;
+      const aH = a.humanData !== 'Not supported' ? 1 : 0;
+      const bH = b.humanData !== 'Not supported' ? 1 : 0;
+      return bH - aH;
     });
   }
-
   if (f['Managed Access'] === 'managed') {
     candidates = candidates.filter(r => r.managedAccess !== 'None (CC0, public only)');
   }
-
   if (f['Storage Requirements'] === 'xlarge') {
     candidates = candidates.filter(r => ['synapse', 'figshare', 'vivli', 'dryad'].includes(r.id));
   } else if (f['Storage Requirements'] === 'large') {
     candidates = candidates.filter(r => !['mendeley'].includes(r.id));
   }
-
   if (f['Cost Preference'] === 'free') {
     candidates = candidates.filter(r => !r.cost.includes('$4k'));
   }
@@ -1180,48 +1437,134 @@ function calculateRecommendation() {
   return candidates.slice(0, 5).map(r => r.id);
 }
 
-function showWizardResult(message, repoIds) {
-  document.getElementById('wizard-header').style.background = '#27ae60';
-  document.getElementById('wizard-title').textContent = 'Recommendation';
-  document.getElementById('wizard-step').textContent = 'Complete';
-  document.getElementById('wizard-question').textContent = message;
+function showCbResult(message, repoIds) {
+  addBotMsg(message);
 
-  const actions = document.getElementById('wizard-actions');
-  actions.innerHTML = '';
+  const summaryArea = document.getElementById('cb-summary-area');
+  let html = '<div class="cb-summary"><h4>Your Selections</h4>';
+  cb.answers.forEach(a => {
+    html += `<div class="cb-summary-row"><span class="cb-summary-q">${a.question}</span><span class="cb-summary-a">${a.answer}</span></div>`;
+  });
 
   if (repoIds && repoIds.length > 0) {
+    html += '<div class="cb-recommend-tags">';
     repoIds.forEach(id => {
-      const repo = repos.find(r => r.id === id);
-      if (repo) {
-        const tag = document.createElement('button');
-        tag.textContent = `${repo.name} (${repo.code})`;
-        tag.style.borderColor = repo.colour;
-        tag.style.color = repo.colour;
-        tag.style.fontWeight = '600';
-        tag.onclick = () => { closeWizard(); goToRepo(id); };
-        actions.appendChild(tag);
+      const r = repos.find(x => x.id === id);
+      if (r) {
+        html += `<button class="cb-repo-tag" style="color:${r.colour};border-color:${r.colour}" onclick="goToRepo('${r.id}')">${r.name} (${r.code})</button>`;
+      }
+    });
+    html += '</div>';
+  }
+  html += '</div>';
+
+  html += '<div class="cb-actions-bar">';
+  html += '<button onclick="resetChatbot()">Start Over</button>';
+  html += '<button onclick="closeChatbot()">Close</button>';
+  html += '</div>';
+
+  summaryArea.innerHTML = html;
+  document.getElementById('cb-messages').scrollTop = document.getElementById('cb-messages').scrollHeight;
+}
+
+// ============================
+// Flowchart Highlighting
+// ============================
+let flowMap = null;
+
+function buildFlowMap() {
+  const section = document.getElementById('flow-section');
+  const all = Array.from(section.children);
+  const nodes = {};
+  const branches = {};
+
+  all.forEach((el, i) => {
+    const nid = el.querySelector('.node-id');
+    if (nid) {
+      nodes[nid.textContent.trim()] = i;
+    }
+    if (el.classList.contains('branch-container')) {
+      for (let j = i - 1; j >= 0; j--) {
+        const pnid = all[j].querySelector('.node-id');
+        if (pnid) {
+          branches[pnid.textContent.trim()] = i;
+          break;
+        }
+      }
+    }
+  });
+
+  return { all, nodes, branches };
+}
+
+function applyHighlighting() {
+  if (!flowMap) flowMap = buildFlowMap();
+  const fc = document.getElementById('view-flowchart');
+  fc.classList.add('wiz-highlighting');
+
+  flowMap.all.forEach(el => {
+    el.classList.remove('wiz-on');
+    if (el.classList.contains('branch-container')) {
+      el.querySelectorAll('.branch').forEach(b => b.classList.remove('wiz-on'));
+    }
+  });
+
+  // START node (inside start-row) is always on path
+  flowMap.all[flowMap.nodes['1']].classList.add('wiz-on');
+}
+
+function clearHighlighting() {
+  const fc = document.getElementById('view-flowchart');
+  fc.classList.remove('wiz-highlighting');
+  if (flowMap) {
+    flowMap.all.forEach(el => {
+      el.classList.remove('wiz-on');
+      if (el.classList.contains('branch-container')) {
+        el.querySelectorAll('.branch').forEach(b => b.classList.remove('wiz-on'));
+      }
+    });
+  }
+}
+
+function highlightStep(stepIdx, branchSide) {
+  if (!flowMap) flowMap = buildFlowMap();
+  const step = cbSteps[stepIdx];
+
+  // Highlight connectors between previous highlighted and current nodes
+  if (step.flowNodes) {
+    step.flowNodes.forEach(nid => {
+      const nodeIdx = flowMap.nodes[nid];
+      if (nodeIdx === undefined) return;
+
+      // Light up this node
+      flowMap.all[nodeIdx].classList.add('wiz-on');
+
+      // Light up everything between previous highlighted and this node
+      for (let i = nodeIdx - 1; i >= 0; i--) {
+        if (flowMap.all[i].classList.contains('wiz-on')) break;
+        flowMap.all[i].classList.add('wiz-on');
       }
     });
   }
 
-  const restartBtn = document.createElement('button');
-  restartBtn.textContent = 'Start Over';
-  restartBtn.style.marginTop = '0.5rem';
-  restartBtn.onclick = () => {
-    wizardState = { step: 0, filters: {}, history: [], answers: [] };
-    renderWizardStep();
-  };
-  actions.appendChild(restartBtn);
+  // Handle branch highlighting
+  if (step.flowBranch && branchSide) {
+    const branchIdx = flowMap.branches[step.flowBranch];
+    if (branchIdx !== undefined) {
+      const bc = flowMap.all[branchIdx];
+      bc.classList.add('wiz-on');
+      const branchChildren = bc.querySelectorAll(':scope > .branch');
+      if (branchSide === 'yes' && branchChildren[0]) branchChildren[0].classList.add('wiz-on');
+      if (branchSide === 'no' && branchChildren[1]) branchChildren[1].classList.add('wiz-on');
+    }
+  }
 
-  // Render answer summary
-  const container = document.getElementById('wizard-answers-container');
-  if (wizardState.answers.length > 0) {
-    let html = '<div class="wizard-answers"><h4>Your Selections</h4>';
-    wizardState.answers.forEach(a => {
-      html += `<div class="wizard-answer-row"><span class="wizard-answer-q">${a.question}</span><span class="wizard-answer-a">${a.answer}</span></div>`;
-    });
-    html += '</div>';
-    container.innerHTML = html;
+  // Scroll to the highlighted node
+  if (step.flowNodes && step.flowNodes[0]) {
+    const nidx = flowMap.nodes[step.flowNodes[0]];
+    if (nidx !== undefined) {
+      flowMap.all[nidx].scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
   }
 }
 </script>
