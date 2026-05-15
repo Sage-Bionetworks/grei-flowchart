@@ -1,0 +1,1230 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GREI Repository Selection Flowchart</title>
+<link rel="stylesheet" href="https://cdn.datatables.net/2.1.8/css/dataTables.dataTables.min.css">
+<style>
+  :root {
+    --colour-start: #1a5276;
+    --colour-decision: #f39c12;
+    --colour-decision-bg: #fef9e7;
+    --colour-action: #27ae60;
+    --colour-action-bg: #eafaf1;
+    --colour-info: #2980b9;
+    --colour-info-bg: #ebf5fb;
+    --colour-end: #8e44ad;
+    --colour-end-bg: #f4ecf7;
+    --colour-sensitive: #e74c3c;
+    --colour-sensitive-bg: #fdedec;
+    --colour-fair: #16a085;
+    --colour-fair-bg: #e8f8f5;
+    --colour-storage: #d35400;
+    --colour-storage-bg: #fef5e7;
+    --colour-licence: #7d3c98;
+    --colour-licence-bg: #f4ecf7;
+    --colour-mdc: #e67e22;
+    --colour-repo-synapse: #3498db;
+    --colour-repo-dataverse: #e74c3c;
+    --colour-repo-dryad: #2ecc71;
+    --colour-repo-figshare: #9b59b6;
+    --colour-repo-mendeley: #e67e22;
+    --colour-repo-osf: #1abc9c;
+    --colour-repo-vivli: #d4ac0d;
+    --colour-repo-zenodo: #34495e;
+    --shadow: 0 2px 8px rgba(0,0,0,0.12);
+    --shadow-hover: 0 4px 16px rgba(0,0,0,0.2);
+    --radius: 8px;
+    --transition: all 0.3s ease;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
+    background: #f0f3f7;
+    color: #2c3e50;
+    line-height: 1.6;
+  }
+
+  .header {
+    background: linear-gradient(135deg, var(--colour-start) 0%, #2c3e50 100%);
+    color: white;
+    padding: 2rem 2rem 1.5rem;
+    text-align: center;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    box-shadow: var(--shadow);
+  }
+  .header h1 { font-size: 1.8rem; font-weight: 700; margin-bottom: 0.3rem; }
+  .header .subtitle { font-size: 1rem; opacity: 0.9; max-width: 700px; margin: 0 auto; }
+  .header .meta { font-size: 0.8rem; opacity: 0.7; margin-top: 0.5rem; }
+
+  .controls {
+    display: flex;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1rem;
+    background: white;
+    border-bottom: 1px solid #e0e0e0;
+    position: sticky;
+    top: 0;
+    z-index: 99;
+    flex-wrap: wrap;
+  }
+  .controls button {
+    padding: 0.4rem 1rem;
+    border: 1px solid #bdc3c7;
+    background: white;
+    border-radius: 20px;
+    cursor: pointer;
+    font-size: 0.85rem;
+    transition: var(--transition);
+    color: #2c3e50;
+  }
+  .controls button:hover, .controls button.active {
+    background: var(--colour-start);
+    color: white;
+    border-color: var(--colour-start);
+  }
+
+  .legend {
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 1rem;
+    padding: 0.75rem 1rem;
+    background: #fafbfc;
+    border-bottom: 1px solid #e0e0e0;
+  }
+  .legend-item { display: flex; align-items: center; gap: 0.4rem; font-size: 0.8rem; color: #555; }
+  .legend-swatch { width: 14px; height: 14px; border-radius: 3px; border: 1px solid rgba(0,0,0,0.15); }
+
+  .container { max-width: 1200px; margin: 0 auto; padding: 2rem 1rem; }
+
+  .flow-section { display: flex; flex-direction: column; align-items: center; gap: 0; }
+
+  .node {
+    position: relative;
+    padding: 1.2rem 1.5rem;
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    max-width: 600px;
+    width: 100%;
+    cursor: pointer;
+    transition: var(--transition);
+    text-align: center;
+  }
+  .node:hover { box-shadow: var(--shadow-hover); transform: translateY(-2px); }
+  .node h3 { font-size: 1rem; margin-bottom: 0.3rem; }
+  .node p { font-size: 0.85rem; color: #555; }
+  .node .node-id {
+    position: absolute; top: -8px; left: -8px;
+    width: 24px; height: 24px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 0.7rem; font-weight: 700; color: white;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+  }
+
+  .node-start { background: linear-gradient(135deg, var(--colour-start), #2c3e50); color: white; border: none; }
+  .node-start .node-id { background: #27ae60; }
+  .node-start p { color: rgba(255,255,255,0.85); }
+
+  .node-decision { background: var(--colour-decision-bg); border: 2px solid var(--colour-decision); }
+  .node-decision .node-id { background: var(--colour-decision); }
+  .node-decision::before {
+    content: ''; position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+    border-left: 4px solid var(--colour-decision); border-radius: var(--radius); pointer-events: none;
+  }
+
+  .node-action { background: var(--colour-action-bg); border: 2px solid var(--colour-action); }
+  .node-action .node-id { background: var(--colour-action); }
+
+  .node-sensitive { background: var(--colour-sensitive-bg); border: 2px solid var(--colour-sensitive); }
+  .node-sensitive .node-id { background: var(--colour-sensitive); }
+
+  .node-fair { background: var(--colour-fair-bg); border: 2px solid var(--colour-fair); }
+  .node-fair .node-id { background: var(--colour-fair); }
+
+  .node-storage { background: var(--colour-storage-bg); border: 2px solid var(--colour-storage); }
+  .node-storage .node-id { background: var(--colour-storage); }
+
+  .node-licence { background: var(--colour-licence-bg); border: 2px solid var(--colour-licence); }
+  .node-licence .node-id { background: var(--colour-licence); }
+
+  .node-info { background: var(--colour-info-bg); border: 2px solid var(--colour-info); }
+  .node-info .node-id { background: var(--colour-info); }
+
+  .node-end { background: var(--colour-end-bg); border: 2px solid var(--colour-end); }
+  .node-end .node-id { background: var(--colour-end); }
+
+  .connector { display: flex; flex-direction: column; align-items: center; position: relative; height: 50px; }
+  .connector .line { width: 2px; flex: 1; background: #95a5a6; }
+  .connector .arrow { width: 0; height: 0; border-left: 6px solid transparent; border-right: 6px solid transparent; border-top: 8px solid #95a5a6; }
+  .connector .label { position: absolute; right: calc(50% + 15px); top: 50%; transform: translateY(-50%); font-size: 0.75rem; font-weight: 600; padding: 2px 8px; border-radius: 10px; white-space: nowrap; }
+  .connector .label-left { right: auto; left: calc(50% + 15px); }
+  .connector .label-yes { background: #d4efdf; color: #27ae60; }
+  .connector .label-no { background: #fadbd8; color: #e74c3c; }
+
+  .branch-container { display: flex; gap: 2rem; width: 100%; max-width: 900px; justify-content: center; align-items: flex-start; }
+  .branch { display: flex; flex-direction: column; align-items: center; flex: 1; max-width: 400px; }
+  .branch-label { font-size: 0.8rem; font-weight: 700; padding: 4px 12px; border-radius: 12px; margin-bottom: 0.5rem; }
+  .branch-label-yes { background: #d4efdf; color: #1e8449; }
+  .branch-label-no { background: #fadbd8; color: #c0392b; }
+
+  .detail-panel {
+    max-height: 0; overflow: hidden; transition: max-height 0.4s ease, padding 0.3s ease;
+    background: rgba(255,255,255,0.9); border-radius: 0 0 var(--radius) var(--radius); width: 100%; text-align: left;
+  }
+  .detail-panel.open { max-height: 2000px; padding: 1rem 1.2rem; border-top: 1px solid rgba(0,0,0,0.08); }
+  .detail-panel h4 { font-size: 0.85rem; margin-bottom: 0.5rem; color: #2c3e50; }
+  .detail-panel ul { list-style: none; padding: 0; }
+  .detail-panel ul li { font-size: 0.8rem; padding: 0.25rem 0; padding-left: 1.2rem; position: relative; color: #555; }
+  .detail-panel ul li::before { content: '\2022'; position: absolute; left: 0; color: #95a5a6; font-weight: bold; }
+
+  .repo-link { color: inherit; text-decoration: none; border-bottom: 1px dotted currentColor; cursor: pointer; }
+  .repo-link:hover { opacity: 0.8; }
+
+  .repo-code-link {
+    display: inline-block; padding: 1px 6px; border-radius: 8px; font-size: 0.7rem;
+    font-weight: 700; color: white; cursor: pointer; text-decoration: none;
+    transition: var(--transition);
+  }
+  .repo-code-link:hover { transform: scale(1.1); box-shadow: 0 2px 6px rgba(0,0,0,0.3); }
+
+  /* Comparison table */
+  .comparison-wrapper {
+    margin: 1rem auto; max-width: 1200px;
+    background: white; box-shadow: var(--shadow); border-radius: var(--radius);
+  }
+  .comparison-table {
+    width: 100%; border-collapse: collapse; font-size: 0.8rem;
+    table-layout: fixed;
+  }
+  .comparison-table thead th {
+    padding: 0.75rem 0.4rem; text-align: center; color: white;
+    border-right: 1px solid rgba(255,255,255,0.2);
+    word-wrap: break-word; overflow-wrap: break-word;
+  }
+  .comparison-table thead th:first-child {
+    text-align: left; width: 12%;
+  }
+  .comparison-table thead th a { color: white; text-decoration: none; border-bottom: 1px dotted rgba(255,255,255,0.6); }
+  .comparison-table thead th a:hover { border-bottom-style: solid; }
+  .comparison-table thead th small { display: block; font-size: 0.7rem; opacity: 0.85; margin-top: 2px; }
+
+  .comparison-table tbody td {
+    padding: 0.5rem 0.4rem; border-bottom: 1px solid #f0f0f0; text-align: center; vertical-align: middle;
+    border-right: 1px solid #f8f8f8;
+    word-wrap: break-word; overflow-wrap: break-word;
+  }
+  .comparison-table tbody td:first-child {
+    font-weight: 700; color: #2c3e50; text-align: left;
+  }
+  .comparison-table tbody tr:nth-child(even) { background: #fafbfc; }
+  .comparison-table tbody tr:hover { background: #f0f7ff !important; }
+
+  .cell-yes { color: #27ae60; font-weight: 600; }
+  .cell-no { color: #e74c3c; }
+  .cell-highlight { background: #fffde7 !important; }
+  .cell-same { }
+  .cell-diff { font-weight: 600; }
+
+  .chip {
+    display: inline-block; padding: 2px 8px; border-radius: 10px;
+    font-size: 0.65rem; font-weight: 600; white-space: nowrap;
+  }
+  .chip-mdc { background: #fef5e7; color: var(--colour-mdc); border: 1px solid var(--colour-mdc); }
+  .chip-human { background: #fdedec; color: var(--colour-sensitive); border: 1px solid var(--colour-sensitive); }
+  .chip-managed { background: #d5f5e3; color: #1e8449; border: 1px solid #27ae60; }
+  .chip-free { background: #ebf5fb; color: #2980b9; border: 1px solid #2980b9; }
+
+  /* Shared features */
+  .shared-features {
+    background: white; border-radius: var(--radius); box-shadow: var(--shadow);
+    padding: 1.5rem; max-width: 800px; margin: 2rem auto; border-left: 4px solid var(--colour-info);
+  }
+  .shared-features h3 { font-size: 1rem; color: var(--colour-info); margin-bottom: 0.75rem; }
+  .shared-features .feature-list { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 0.4rem; }
+  .shared-features .feature-list span { font-size: 0.8rem; color: #555; padding-left: 1rem; position: relative; }
+  .shared-features .feature-list span::before { content: '\2713'; position: absolute; left: 0; color: var(--colour-action); font-weight: bold; }
+
+  .dt-wrapper { margin: 1.5rem auto; max-width: 1200px; background: white; box-shadow: var(--shadow); border-radius: var(--radius); padding: 1rem; overflow: hidden; }
+  .dt-wrapper table.dataTable { font-size: 0.8rem; table-layout: fixed; width: 100% !important; }
+  .dt-wrapper table.dataTable th, .dt-wrapper table.dataTable td { word-wrap: break-word; overflow-wrap: break-word; }
+  .dt-wrapper table.dataTable tbody td:first-child { font-weight: 700; color: #2c3e50; }
+  .dt-wrapper .dt-search input { border: 1px solid #bdc3c7; border-radius: 4px; padding: 0.3rem 0.6rem; }
+
+  /* Wizard */
+  .wizard-overlay {
+    display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0,0,0,0.6); z-index: 200; justify-content: center; align-items: center;
+  }
+  .wizard-overlay.active { display: flex; }
+  .wizard-card {
+    background: white; border-radius: 12px; box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+    max-width: 600px; width: 90%; overflow: hidden; animation: wizardIn 0.3s ease;
+  }
+  @keyframes wizardIn { from { transform: scale(0.9); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+  .wizard-card .wizard-header { padding: 1.5rem; color: white; text-align: center; }
+  .wizard-card .wizard-header h2 { font-size: 1.1rem; }
+  .wizard-card .wizard-header .step-indicator { font-size: 0.8rem; opacity: 0.8; margin-top: 0.3rem; }
+  .wizard-body { padding: 1.5rem; }
+  .wizard-body p { font-size: 0.9rem; color: #555; margin-bottom: 1rem; text-align: center; }
+  .wizard-actions { display: flex; gap: 0.75rem; justify-content: center; flex-wrap: wrap; }
+  .wizard-actions button {
+    padding: 0.6rem 1.5rem; border: 2px solid #ddd; background: white; border-radius: var(--radius);
+    cursor: pointer; font-size: 0.9rem; transition: var(--transition); color: #2c3e50;
+  }
+  .wizard-actions button:hover { border-color: var(--colour-start); background: var(--colour-start); color: white; }
+  .wizard-actions button.btn-yes { border-color: var(--colour-action); }
+  .wizard-actions button.btn-yes:hover { background: var(--colour-action); border-color: var(--colour-action); }
+  .wizard-actions button.btn-no { border-color: var(--colour-sensitive); }
+  .wizard-actions button.btn-no:hover { background: var(--colour-sensitive); border-color: var(--colour-sensitive); }
+  .wizard-footer {
+    padding: 1rem 1.5rem; background: #f9f9f9; border-top: 1px solid #eee;
+    display: flex; justify-content: space-between; align-items: center;
+  }
+  .wizard-footer button {
+    padding: 0.4rem 1rem; border: 1px solid #bdc3c7; background: white;
+    border-radius: 20px; cursor: pointer; font-size: 0.8rem; transition: var(--transition); color: #555;
+  }
+  .wizard-footer button:hover { background: #ecf0f1; }
+
+  .wizard-answers {
+    margin-top: 1rem; padding: 1rem; background: #f8f9fa; border-radius: var(--radius);
+    border: 1px solid #e0e0e0; text-align: left; max-height: 300px; overflow-y: auto;
+  }
+  .wizard-answers h4 { font-size: 0.85rem; color: #2c3e50; margin-bottom: 0.5rem; }
+  .wizard-answer-row {
+    display: flex; justify-content: space-between; align-items: baseline;
+    padding: 0.3rem 0; border-bottom: 1px solid #eee; font-size: 0.8rem;
+  }
+  .wizard-answer-row:last-child { border-bottom: none; }
+  .wizard-answer-q { color: #888; flex: 1; }
+  .wizard-answer-a { color: #2c3e50; font-weight: 600; flex: 1; text-align: right; }
+
+  .tooltip {
+    position: absolute; background: #2c3e50; color: white; padding: 0.5rem 0.75rem;
+    border-radius: 6px; font-size: 0.75rem; max-width: 250px; z-index: 300;
+    pointer-events: none; opacity: 0; transition: opacity 0.2s ease; line-height: 1.4;
+  }
+  .tooltip.visible { opacity: 1; }
+  .tooltip::after {
+    content: ''; position: absolute; bottom: -6px; left: 50%; transform: translateX(-50%);
+    width: 0; height: 0; border-left: 6px solid transparent; border-right: 6px solid transparent; border-top: 6px solid #2c3e50;
+  }
+
+  .section-divider { text-align: center; margin: 2rem 0 1rem; position: relative; }
+  .section-divider::before { content: ''; position: absolute; top: 50%; left: 0; right: 0; height: 1px; background: #ddd; }
+  .section-divider span {
+    background: #f0f3f7; padding: 0 1rem; font-size: 0.8rem; color: #888;
+    font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; position: relative;
+  }
+
+  @media print {
+    .header { position: static; }
+    .controls, .legend { display: none; }
+    .wizard-overlay { display: none !important; }
+    .node:hover { transform: none; box-shadow: var(--shadow); }
+  }
+  @media (max-width: 768px) {
+    .header h1 { font-size: 1.3rem; }
+    .branch-container { flex-direction: column; align-items: center; }
+    .node { max-width: 100%; }
+  }
+</style>
+</head>
+<body>
+
+<div class="tooltip" id="tooltip"></div>
+
+<div class="header">
+  <h1>GREI Repository Selection Flowchart</h1>
+  <p class="subtitle">Generalist Repository Ecosystem Initiative: A decision guide for selecting the right NIH-supported generalist repository for your research data</p>
+  <p class="meta">Version 3.1 | Last updated: 15 May 2026 | Source: NIH Office of Data Science Strategy</p>
+</div>
+
+<div class="controls" id="nav-controls">
+  <button class="active" onclick="showView('flowchart', this)">Decision Flowchart</button>
+  <button onclick="showView('repositories', this)">Repository Comparison</button>
+  <button onclick="startWizard()">Interactive Wizard</button>
+  <button onclick="showView('features', this)">Shared Features</button>
+</div>
+
+<div class="legend">
+  <div class="legend-item"><div class="legend-swatch" style="background:var(--colour-start)"></div>Start / End</div>
+  <div class="legend-item"><div class="legend-swatch" style="background:var(--colour-decision)"></div>Decision Point</div>
+  <div class="legend-item"><div class="legend-swatch" style="background:var(--colour-action)"></div>Action</div>
+  <div class="legend-item"><div class="legend-swatch" style="background:var(--colour-sensitive)"></div>Sensitive Data</div>
+  <div class="legend-item"><div class="legend-swatch" style="background:var(--colour-fair)"></div>FAIR Compliance</div>
+  <div class="legend-item"><div class="legend-swatch" style="background:var(--colour-storage)"></div>Storage</div>
+  <div class="legend-item"><div class="legend-swatch" style="background:var(--colour-licence)"></div>Licensing</div>
+  <div class="legend-item"><div class="legend-swatch" style="background:var(--colour-info)"></div>Information</div>
+  <div class="legend-item"><div class="legend-swatch" style="background:var(--colour-mdc)"></div>Make Data Count</div>
+</div>
+
+<div class="container" id="main-container">
+
+  <!-- ======= FLOWCHART VIEW ======= -->
+  <div id="view-flowchart">
+    <div class="flow-section">
+
+      <div class="node node-start" data-tooltip="Begin the GREI repository selection process." onclick="toggleDetail(this)">
+        <span class="node-id">1</span>
+        <h3>START</h3>
+        <p>Select a generalist repository for your NIH-funded research data</p>
+        <div class="detail-panel">
+          <h4>Background</h4>
+          <ul>
+            <li>The NIH Data Management and Sharing (DMS) Policy (effective January 2023) requires all NIH-funded researchers to share scientific data</li>
+            <li>GREI supports eight generalist repositories to provide broad, discipline-agnostic data sharing options</li>
+            <li>Discipline-specific repositories are preferred when available; generalist repositories serve as a universal fallback</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="connector"><div class="line"></div><div class="arrow"></div></div>
+
+      <div class="node node-decision" data-tooltip="Check whether your field has a designated repository." onclick="toggleDetail(this)">
+        <span class="node-id">2</span>
+        <h3>Is there a designated or discipline-specific repository recommended for your data?</h3>
+        <p>Check your funder requirements and field norms first</p>
+        <div class="detail-panel">
+          <h4>How to check</h4>
+          <ul>
+            <li>Review your NIH Funding Opportunity Announcement (FOA) for specific repository requirements</li>
+            <li>Consult the NIH Scientific Data Sharing website for discipline-specific repositories</li>
+            <li>Check community standards in your field (e.g., GenBank for sequences, PDB for structures, dbGaP for controlled-access human genomic data)</li>
+            <li>Ask your institutional library or data services team for guidance</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="branch-container">
+        <div class="branch">
+          <div class="branch-label branch-label-yes">Yes</div>
+          <div class="connector" style="height:30px"><div class="line"></div><div class="arrow"></div></div>
+          <div class="node node-action" style="max-width:350px" data-tooltip="If a discipline-specific repository exists for your data type, use it.">
+            <h3>Use the designated discipline-specific repository</h3>
+            <p>This is the recommended first choice under NIH policy</p>
+          </div>
+        </div>
+        <div class="branch">
+          <div class="branch-label branch-label-no">No</div>
+          <div class="connector" style="height:30px"><div class="line"></div><div class="arrow"></div></div>
+          <div class="node node-info" style="max-width:350px" data-tooltip="Proceed to evaluate generalist repository options.">
+            <h3>Proceed to evaluate generalist repository options</h3>
+            <p>Continue below</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="connector"><div class="line"></div><div class="arrow"></div></div>
+
+      <div class="node node-decision" data-tooltip="Check whether your institution has its own repository or membership." onclick="toggleDetail(this)">
+        <span class="node-id">3</span>
+        <h3>Does your institution have a data repository, preferred repository, or membership with a generalist repository?</h3>
+        <div class="detail-panel">
+          <h4>What to look for</h4>
+          <ul>
+            <li>Institutional data repository (e.g., university-hosted Dataverse installation)</li>
+            <li>Preferred data repository listed in institutional data management policies</li>
+            <li>Institutional membership with a generalist repository (e.g., <a class="repo-code-link" style="background:var(--colour-repo-dryad)" onclick="event.stopPropagation();goToRepo('dryad')">DR</a> Dryad, <a class="repo-code-link" style="background:var(--colour-repo-figshare)" onclick="event.stopPropagation();goToRepo('figshare')">FI</a> Figshare for Institutions)</li>
+            <li>Contact your institutional library, research data services, or IT department</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="branch-container">
+        <div class="branch">
+          <div class="branch-label branch-label-yes">Yes</div>
+          <div class="connector" style="height:30px"><div class="line"></div><div class="arrow"></div></div>
+          <div class="node node-action" style="max-width:350px" data-tooltip="Using your institution's repository may reduce costs and provide local support.">
+            <h3>Use your institution's repository</h3>
+            <p>Verify it meets NIH DMS Policy requirements</p>
+          </div>
+        </div>
+        <div class="branch">
+          <div class="branch-label branch-label-no">No</div>
+          <div class="connector" style="height:30px"><div class="line"></div><div class="arrow"></div></div>
+          <div class="node node-info" style="max-width:350px" data-tooltip="Evaluate based on your data requirements below.">
+            <h3>Choose from GREI generalist repositories</h3>
+            <p>Evaluate based on your data requirements below</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="section-divider"><span>Data Sensitivity Assessment</span></div>
+
+      <div class="connector"><div class="line"></div><div class="arrow"></div></div>
+
+      <div class="node node-sensitive" data-tooltip="Critical decision point. Determines which repositories can host your data." onclick="toggleDetail(this)">
+        <span class="node-id">4</span>
+        <h3>Does your dataset contain human subjects, clinical trial, PHI, or PII data?</h3>
+        <p>This determines which repositories can host your data and what access controls are needed</p>
+        <div class="detail-panel">
+          <h4>Types of sensitive data</h4>
+          <ul>
+            <li><strong>Human subjects data:</strong> Data collected from human participants in research studies</li>
+            <li><strong>Clinical trial data:</strong> Individual participant-level data from clinical studies</li>
+            <li><strong>PHI (Protected Health Information):</strong> Data covered under HIPAA</li>
+            <li><strong>PII (Personally Identifiable Information):</strong> Data that can identify an individual</li>
+            <li><strong>Important:</strong> Data must be de-identified or anonymised before deposit in most generalist repositories</li>
+          </ul>
+          <h4>Repositories supporting individual-level human data</h4>
+          <ul>
+            <li><a class="repo-code-link" style="background:var(--colour-repo-synapse)" onclick="event.stopPropagation();goToRepo('synapse')">SY</a> <strong>Synapse:</strong> Full support for de-identified human data in a FISMA Moderate environment, with tiered access controls</li>
+            <li><a class="repo-code-link" style="background:var(--colour-repo-vivli)" onclick="event.stopPropagation();goToRepo('vivli')">VI</a> <strong>Vivli:</strong> Specialised in anonymised individual participant-level clinical trial data with managed access</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="branch-container">
+        <div class="branch">
+          <div class="branch-label branch-label-yes">Yes</div>
+          <div class="connector" style="height:30px"><div class="line"></div><div class="arrow"></div></div>
+          <div class="node node-action" style="max-width:380px" data-tooltip="Anonymise or de-identify before deposit. Use managed access controls." onclick="toggleDetail(this)">
+            <h3>Anonymise or de-identify data before submission</h3>
+            <p>Best practice: employ managed access controls</p>
+            <div class="detail-panel">
+              <h4>Managed access support by repository</h4>
+              <ul>
+                <li><a class="repo-code-link" style="background:var(--colour-repo-synapse)" onclick="event.stopPropagation();goToRepo('synapse')">SY</a> <strong>Synapse:</strong> User-enabled sharing settings and ACT controlled access</li>
+                <li><a class="repo-code-link" style="background:var(--colour-repo-vivli)" onclick="event.stopPropagation();goToRepo('vivli')">VI</a> <strong>Vivli:</strong> Fully managed access with Independent Review Panel (IRP)</li>
+                <li><a class="repo-code-link" style="background:var(--colour-repo-dataverse)" onclick="event.stopPropagation();goToRepo('dataverse')">HD</a> <strong>Harvard Dataverse:</strong> Request and grant access workflow</li>
+                <li><a class="repo-code-link" style="background:var(--colour-repo-figshare)" onclick="event.stopPropagation();goToRepo('figshare')">FI</a> <strong>Figshare:</strong> Private link and embargo features</li>
+                <li><a class="repo-code-link" style="background:var(--colour-repo-osf)" onclick="event.stopPropagation();goToRepo('osf')">OS</a> <strong>OSF:</strong> Request access and private sharing settings</li>
+                <li><a class="repo-code-link" style="background:var(--colour-repo-mendeley)" onclick="event.stopPropagation();goToRepo('mendeley')">MD</a> <strong>Mendeley Data:</strong> Managed access supported</li>
+                <li><a class="repo-code-link" style="background:var(--colour-repo-zenodo)" onclick="event.stopPropagation();goToRepo('zenodo')">ZE</a> <strong>Zenodo:</strong> Access request workflow for restricted content</li>
+                <li><a class="repo-code-link" style="background:var(--colour-repo-dryad)" onclick="event.stopPropagation();goToRepo('dryad')">DR</a> <strong>Dryad:</strong> No managed access (CC0 only, public data)</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+        <div class="branch">
+          <div class="branch-label branch-label-no">No</div>
+          <div class="connector" style="height:30px"><div class="line"></div><div class="arrow"></div></div>
+          <div class="node node-info" style="max-width:350px" data-tooltip="All eight GREI repositories are potential options.">
+            <h3>All eight GREI repositories are potential options</h3>
+            <p>Evaluate based on features below</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="section-divider"><span>FAIR Compliance and Access</span></div>
+
+      <div class="connector"><div class="line"></div><div class="arrow"></div></div>
+
+      <div class="node node-decision" data-tooltip="Managed access means controlling who can access your data and under what conditions." onclick="toggleDetail(this)">
+        <span class="node-id">5</span>
+        <h3>Does your data require managed access?</h3>
+        <p>Control who can access your data and under what conditions</p>
+        <div class="detail-panel">
+          <h4>Types of managed access</h4>
+          <ul>
+            <li><strong>Pre-publication embargo only:</strong> Supported by all eight repositories</li>
+            <li><strong>User-managed access:</strong> Researcher controls who can access. Supported by: <a class="repo-code-link" style="background:var(--colour-repo-dataverse)" onclick="event.stopPropagation();goToRepo('dataverse')">HD</a> <a class="repo-code-link" style="background:var(--colour-repo-figshare)" onclick="event.stopPropagation();goToRepo('figshare')">FI</a> <a class="repo-code-link" style="background:var(--colour-repo-osf)" onclick="event.stopPropagation();goToRepo('osf')">OS</a> <a class="repo-code-link" style="background:var(--colour-repo-mendeley)" onclick="event.stopPropagation();goToRepo('mendeley')">MD</a> <a class="repo-code-link" style="background:var(--colour-repo-zenodo)" onclick="event.stopPropagation();goToRepo('zenodo')">ZE</a></li>
+            <li><strong>Repository-managed access:</strong> Repository governance manages decisions. Supported by: <a class="repo-code-link" style="background:var(--colour-repo-synapse)" onclick="event.stopPropagation();goToRepo('synapse')">SY</a> (ACT) <a class="repo-code-link" style="background:var(--colour-repo-vivli)" onclick="event.stopPropagation();goToRepo('vivli')">VI</a> (IRP)</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="connector"><div class="line"></div><div class="arrow"></div></div>
+
+      <div class="node node-fair" data-tooltip="All GREI repositories are FAIR compliant, but some offer additional support." onclick="toggleDetail(this)">
+        <span class="node-id">6</span>
+        <h3>Do you need help complying with FAIR principles?</h3>
+        <p>Findable, Accessible, Interoperable, Reusable</p>
+        <div class="detail-panel">
+          <h4>FAIR support options</h4>
+          <ul>
+            <li><strong>General deposit (free):</strong> All repositories provide basic metadata forms and DOI assignment</li>
+            <li><strong>Moderation and support:</strong> <a class="repo-code-link" style="background:var(--colour-repo-dataverse)" onclick="event.stopPropagation();goToRepo('dataverse')">HD</a> <a class="repo-code-link" style="background:var(--colour-repo-dryad)" onclick="event.stopPropagation();goToRepo('dryad')">DR</a> <a class="repo-code-link" style="background:var(--colour-repo-figshare)" onclick="event.stopPropagation();goToRepo('figshare')">FI</a> provide moderation of deposits</li>
+            <li><strong>Research environment:</strong> <a class="repo-code-link" style="background:var(--colour-repo-synapse)" onclick="event.stopPropagation();goToRepo('synapse')">SY</a> provides a collaborative research environment with built-in provenance tracking</li>
+            <li><strong>Independent Review Panel:</strong> <a class="repo-code-link" style="background:var(--colour-repo-vivli)" onclick="event.stopPropagation();goToRepo('vivli')">VI</a> provides expert review of data access requests for clinical trial data</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="section-divider"><span>Technical Requirements</span></div>
+
+      <div class="connector"><div class="line"></div><div class="arrow"></div></div>
+
+      <div class="node node-storage" data-tooltip="Different repositories have different storage limits and cost structures." onclick="toggleDetail(this)">
+        <span class="node-id">7</span>
+        <h3>What are your storage size requirements?</h3>
+        <p>Repositories vary significantly in storage limits and associated costs</p>
+        <div class="detail-panel">
+          <h4>Storage limits by repository</h4>
+          <ul>
+            <li><strong>&lt; 50 GB:</strong> All repositories (<a class="repo-code-link" style="background:var(--colour-repo-dryad)" onclick="event.stopPropagation();goToRepo('dryad')">DR</a> <a class="repo-code-link" style="background:var(--colour-repo-figshare)" onclick="event.stopPropagation();goToRepo('figshare')">FI</a> <a class="repo-code-link" style="background:var(--colour-repo-mendeley)" onclick="event.stopPropagation();goToRepo('mendeley')">MD</a> <a class="repo-code-link" style="background:var(--colour-repo-osf)" onclick="event.stopPropagation();goToRepo('osf')">OS</a> <a class="repo-code-link" style="background:var(--colour-repo-zenodo)" onclick="event.stopPropagation();goToRepo('zenodo')">ZE</a> support this tier for free)</li>
+            <li><strong>&lt; 300 GB:</strong> <a class="repo-code-link" style="background:var(--colour-repo-dryad)" onclick="event.stopPropagation();goToRepo('dryad')">DR</a> (up to 300 GB browser, 1 TB with assistance), <a class="repo-code-link" style="background:var(--colour-repo-synapse)" onclick="event.stopPropagation();goToRepo('synapse')">SY</a> (free up to 100 GB)</li>
+            <li><strong>&lt; 1 TB:</strong> <a class="repo-code-link" style="background:var(--colour-repo-dataverse)" onclick="event.stopPropagation();goToRepo('dataverse')">HD</a> (1 TB per researcher), <a class="repo-code-link" style="background:var(--colour-repo-vivli)" onclick="event.stopPropagation();goToRepo('vivli')">VI</a> (included)</li>
+            <li><strong>&gt; 1 TB:</strong> <a class="repo-code-link" style="background:var(--colour-repo-synapse)" onclick="event.stopPropagation();goToRepo('synapse')">SY</a> (service plans), <a class="repo-code-link" style="background:var(--colour-repo-figshare)" onclick="event.stopPropagation();goToRepo('figshare')">FI</a> (Figshare+ up to 10 TB+)</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="connector"><div class="line"></div><div class="arrow"></div></div>
+
+      <div class="node node-licence" data-tooltip="The licence you choose determines how others can reuse your data." onclick="toggleDetail(this)">
+        <span class="node-id">8</span>
+        <h3>What licence options are suitable for your data?</h3>
+        <p>Determines reuse conditions for your shared data</p>
+        <div class="detail-panel">
+          <h4>Common licence options</h4>
+          <ul>
+            <li><strong>CC0 (no restrictions):</strong> Maximises reuse. Required by <a class="repo-code-link" style="background:var(--colour-repo-dryad)" onclick="event.stopPropagation();goToRepo('dryad')">DR</a> Dryad. Supported by all repositories</li>
+            <li><strong>CC BY 4.0 (attribution):</strong> Requires citation. Supported by most repositories</li>
+            <li><strong>CC BY-NC (non-commercial):</strong> Restricts commercial reuse. Supported by <a class="repo-code-link" style="background:var(--colour-repo-mendeley)" onclick="event.stopPropagation();goToRepo('mendeley')">MD</a> <a class="repo-code-link" style="background:var(--colour-repo-figshare)" onclick="event.stopPropagation();goToRepo('figshare')">FI</a></li>
+            <li><strong>Software licences (MIT, Apache, GPL, BSD):</strong> For code and tools. Supported by <a class="repo-code-link" style="background:var(--colour-repo-synapse)" onclick="event.stopPropagation();goToRepo('synapse')">SY</a> <a class="repo-code-link" style="background:var(--colour-repo-figshare)" onclick="event.stopPropagation();goToRepo('figshare')">FI</a> <a class="repo-code-link" style="background:var(--colour-repo-mendeley)" onclick="event.stopPropagation();goToRepo('mendeley')">MD</a> <a class="repo-code-link" style="background:var(--colour-repo-osf)" onclick="event.stopPropagation();goToRepo('osf')">OS</a> <a class="repo-code-link" style="background:var(--colour-repo-zenodo)" onclick="event.stopPropagation();goToRepo('zenodo')">ZE</a></li>
+            <li><strong>Custom/other:</strong> <a class="repo-code-link" style="background:var(--colour-repo-osf)" onclick="event.stopPropagation();goToRepo('osf')">OS</a> and <a class="repo-code-link" style="background:var(--colour-repo-zenodo)" onclick="event.stopPropagation();goToRepo('zenodo')">ZE</a> support custom licence files</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="section-divider"><span>Services and Support</span></div>
+
+      <div class="connector"><div class="line"></div><div class="arrow"></div></div>
+
+      <div class="node node-info" data-tooltip="Consider what level of curation and support you need." onclick="toggleDetail(this)">
+        <span class="node-id">9</span>
+        <h3>What curation and support services do you need?</h3>
+        <p>Options range from free self-service to comprehensive paid curation</p>
+        <div class="detail-panel">
+          <h4>Service tiers</h4>
+          <ul>
+            <li><strong>General deposit (free):</strong> Self-service upload with basic metadata. All repositories</li>
+            <li><strong>Deposit moderation (free):</strong> Staff review of submissions. <a class="repo-code-link" style="background:var(--colour-repo-dataverse)" onclick="event.stopPropagation();goToRepo('dataverse')">HD</a> <a class="repo-code-link" style="background:var(--colour-repo-dryad)" onclick="event.stopPropagation();goToRepo('dryad')">DR</a> <a class="repo-code-link" style="background:var(--colour-repo-figshare)" onclick="event.stopPropagation();goToRepo('figshare')">FI</a></li>
+            <li><strong>Research environment ($):</strong> Collaborative workspace with compute, provenance, governance. <a class="repo-code-link" style="background:var(--colour-repo-synapse)" onclick="event.stopPropagation();goToRepo('synapse')">SY</a></li>
+            <li><strong>Independent Review Panel ($):</strong> Expert panel for managed access decisions. <a class="repo-code-link" style="background:var(--colour-repo-vivli)" onclick="event.stopPropagation();goToRepo('vivli')">VI</a></li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="connector"><div class="line"></div><div class="arrow"></div></div>
+
+      <div class="node node-action" data-tooltip="Select the appropriate licence for your data using the Creative Commons licence chooser." onclick="toggleDetail(this)">
+        <span class="node-id">10</span>
+        <h3>Select your licence and deposit your data</h3>
+        <p>Visit <a href="https://chooser-beta.creativecommons.org/" target="_blank" rel="noopener" style="color:var(--colour-action)" onclick="event.stopPropagation()">Creative Commons Licence Chooser</a> for help selecting the right licence</p>
+        <div class="detail-panel">
+          <h4>Licence selection guidance</h4>
+          <ul>
+            <li><strong>CC0:</strong> Best for maximum reuse and discoverability. Required by Dryad. Recommended by NIH for most research data</li>
+            <li><strong>CC BY 4.0:</strong> Use when you want attribution. Good for datasets where citation tracking matters</li>
+            <li><strong>CC BY-NC:</strong> Restricts commercial use. Consider whether this aligns with NIH open-science goals</li>
+            <li><strong>Software licences:</strong> Use MIT, Apache 2.0, or BSD for code and analysis scripts. Use GPL if you want derivative works to remain open</li>
+          </ul>
+          <h4>Before depositing</h4>
+          <ul>
+            <li>Ensure your data management and sharing plan (DMS Plan) is consistent with the repository and licence you select</li>
+            <li>Verify that your chosen repository issues DOIs and supports the metadata standards required by your funder</li>
+            <li>Check whether your institution has a preferred or mandated repository</li>
+            <li>For sensitive data, confirm that access controls are in place before making any data available</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="connector"><div class="line"></div><div class="arrow"></div></div>
+
+      <div class="node node-start" data-tooltip="Your data is now shared in a GREI-supported generalist repository.">
+        <span class="node-id" style="background:var(--colour-end)">E</span>
+        <h3>END</h3>
+        <p>Data deposited in a GREI-supported generalist repository</p>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ======= REPOSITORY COMPARISON VIEW ======= -->
+  <div id="view-repositories" style="display:none">
+    <div class="section-divider"><span>Side-by-Side Repository Comparison</span></div>
+    <p style="text-align:center; font-size:0.85rem; color:#888; margin-bottom:1rem;">Click a repository name to visit its documentation. Differences between repositories are highlighted in bold.</p>
+    <div class="comparison-wrapper">
+      <table class="comparison-table" id="repo-comparison-table">
+        <thead id="repo-comparison-thead"></thead>
+        <tbody id="repo-comparison-tbody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ======= SHARED FEATURES VIEW ======= -->
+  <div id="view-features" style="display:none">
+    <div class="shared-features">
+      <h3>Features Shared by All GREI Repositories</h3>
+      <div class="feature-list">
+        <span>Version support</span>
+        <span>Embargo option</span>
+        <span>Peer review access</span>
+        <span>Metadata schemas</span>
+        <span>JSON for data export</span>
+        <span>PIDs for creators, authors, identifiers, and affiliations</span>
+        <span>Funder information</span>
+        <span>Grant ID(s) and grant ID affiliation(s)</span>
+        <span>Linking to related software and research works</span>
+        <span>FAIR compliant</span>
+        <span>DOI persistent identifiers</span>
+        <span>ORCID support for authors</span>
+        <span>Linking to related publications</span>
+      </div>
+    </div>
+
+    <div class="section-divider"><span>Detailed Feature Comparison</span></div>
+    <div class="dt-wrapper">
+      <table id="features-datatable" class="display" style="width:100%">
+        <thead>
+          <tr>
+            <th>Feature</th>
+            <th>Synapse (SY)</th>
+            <th>Harvard Dataverse (HD)</th>
+            <th>Dryad (DR)</th>
+            <th>Figshare (FI)</th>
+            <th>Mendeley Data (MD)</th>
+            <th>OSF (OS)</th>
+            <th>Vivli (VI)</th>
+            <th>Zenodo (ZE)</th>
+          </tr>
+        </thead>
+        <tbody id="features-dt-body"></tbody>
+      </table>
+    </div>
+  </div>
+
+</div>
+
+<!-- Interactive Wizard Overlay -->
+<div class="wizard-overlay" id="wizard-overlay">
+  <div class="wizard-card">
+    <div class="wizard-header" id="wizard-header">
+      <h2 id="wizard-title">Repository Selection Wizard</h2>
+      <div class="step-indicator" id="wizard-step">Step 1 of 7</div>
+    </div>
+    <div class="wizard-body">
+      <p id="wizard-question"></p>
+      <div class="wizard-actions" id="wizard-actions"></div>
+      <div id="wizard-answers-container"></div>
+    </div>
+    <div class="wizard-footer">
+      <button onclick="wizardBack()">Back</button>
+      <button onclick="closeWizard()">Close</button>
+    </div>
+  </div>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<script src="https://cdn.datatables.net/2.1.8/js/dataTables.min.js"></script>
+<script>
+const repoUrls = {
+  synapse: 'https://www.synapse.org/',
+  dataverse: 'https://dataverse.harvard.edu/',
+  dryad: 'https://datadryad.org/',
+  figshare: 'https://figshare.com/',
+  mendeley: 'https://data.mendeley.com/',
+  osf: 'https://osf.io/',
+  vivli: 'https://vivli.org/',
+  zenodo: 'https://zenodo.org/'
+};
+
+const repos = [
+  {
+    id: 'synapse', code: 'SY', name: 'Synapse', colour: '#3498db',
+    operator: 'Sage Bionetworks',
+    url: repoUrls.synapse,
+    sizeLimit: '100 GB free, larger by arrangement',
+    cost: 'Free up to 100 GB; service plans for larger',
+    managedAccess: 'ACT + user-enabled sharing',
+    humanData: 'De-identified, FISMA Moderate',
+    embargo: true, peerReview: true,
+    licences: 'CC, Apache, MIT, Other Open Data Licences, Data Use Agreement',
+    metadata: 'Schema.org',
+    preservation: '5yr+/perpetuity by contract',
+    businessModel: 'Non-profit',
+    makeDataCount: true,
+    curation: 'Research environment with provenance',
+    researchEnv: true
+  },
+  {
+    id: 'dataverse', code: 'HD', name: 'Harvard Dataverse', colour: '#e74c3c',
+    operator: 'The Dataverse Project',
+    url: repoUrls.dataverse,
+    sizeLimit: 'No byte limit; 2.5 GB/file; 1 TB/researcher',
+    cost: 'Free (up to 1 TB)',
+    managedAccess: 'Request and grant workflow',
+    humanData: 'Not supported',
+    embargo: true, peerReview: true,
+    licences: 'CC0 default, custom supported',
+    metadata: 'Dublin Core, DDI, DataCite, OpenAIRE, Schema.org, OAI-ORE',
+    preservation: 'Harvard FAS Research Computing',
+    businessModel: 'University/grants/consortium',
+    makeDataCount: false,
+    curation: 'Deposit moderation',
+    researchEnv: false
+  },
+  {
+    id: 'dryad', code: 'DR', name: 'Dryad', colour: '#2ecc71',
+    operator: 'Dryad',
+    url: repoUrls.dryad,
+    sizeLimit: '300 GB browser; 1 TB with assistance',
+    cost: '$150 or covered by member institution',
+    managedAccess: 'None (CC0, public only)',
+    humanData: 'De-identified only',
+    embargo: true, peerReview: true,
+    licences: 'CC0 required',
+    metadata: 'DataCite, Schema.org',
+    preservation: 'CoreTrustSeal Merritt; SDSC, DANS, Zenodo',
+    businessModel: 'Non-profit/community members',
+    makeDataCount: true,
+    curation: 'Deposit moderation; free basic curation',
+    researchEnv: false
+  },
+  {
+    id: 'figshare', code: 'FI', name: 'Figshare', colour: '#9b59b6',
+    operator: 'Figshare',
+    url: repoUrls.figshare,
+    sizeLimit: '20 GB free; Figshare+ 100 GB to 10 TB+',
+    cost: 'Free; Figshare+ one-time fee',
+    managedAccess: 'Private link and embargo',
+    humanData: 'Not supported',
+    embargo: true, peerReview: true,
+    licences: '10+ (CC0, CC BY, MIT, Apache, GPL, BSD...)',
+    metadata: 'Dublin Core, DataCite, RDF, CERIF, Schema.org + 3 more',
+    preservation: 'CLOCKSS BagIt',
+    businessModel: 'SaaS model',
+    makeDataCount: true,
+    curation: 'Deposit moderation; paid curation available',
+    researchEnv: false
+  },
+  {
+    id: 'mendeley', code: 'MD', name: 'Mendeley Data', colour: '#e67e22',
+    operator: 'Elsevier',
+    url: repoUrls.mendeley,
+    sizeLimit: '10 GB per dataset',
+    cost: 'Free',
+    managedAccess: 'Supported',
+    humanData: 'Not supported',
+    embargo: true, peerReview: true,
+    licences: '15+ (CC0, CC BY, MIT, Apache, GPL, BSD, CeCILL...)',
+    metadata: 'Dublin Core, DataCite, Schema.org',
+    preservation: 'DANS; perpetuity',
+    businessModel: 'Subscription (Elsevier)',
+    makeDataCount: true,
+    curation: 'Custom curation support',
+    researchEnv: false
+  },
+  {
+    id: 'osf', code: 'OS', name: 'Open Science Framework', colour: '#1abc9c',
+    operator: 'Center for Open Science',
+    url: repoUrls.osf,
+    sizeLimit: '50 GB public / 5 GB private; unlimited via add-ons',
+    cost: 'Free',
+    managedAccess: 'Request access + private sharing',
+    humanData: 'Not supported',
+    embargo: true, peerReview: true,
+    licences: '14+ (CC0, CC BY, MIT, Apache, BSD, GPL, custom)',
+    metadata: 'DataCite, Crossref Preprint',
+    preservation: '$250k fund; Internet Archive IMLS grant',
+    businessModel: 'Non-profit/grants/government',
+    makeDataCount: false,
+    curation: 'Custom curation; open API',
+    researchEnv: true
+  },
+  {
+    id: 'vivli', code: 'VI', name: 'Vivli', colour: '#d4ac0d',
+    operator: 'Vivli',
+    url: repoUrls.vivli,
+    sizeLimit: '1 TB included; contact for larger',
+    cost: '$4k (<500 GB) / $10k (>500 GB); waived for members',
+    managedAccess: 'Fully managed with IRP',
+    humanData: 'Anonymised IPD from clinical trials',
+    embargo: true, peerReview: true,
+    licences: 'Vivli Data Use Agreement',
+    metadata: 'DataCite, Schema.org',
+    preservation: 'Azure secure; 10-year minimum',
+    businessModel: 'Non-profit/grants/members',
+    makeDataCount: true,
+    curation: 'Independent Review Panel (IRP)',
+    researchEnv: true
+  },
+  {
+    id: 'zenodo', code: 'ZE', name: 'Zenodo', colour: '#34495e',
+    operator: 'CERN',
+    url: repoUrls.zenodo,
+    sizeLimit: '50 GB per dataset; contact for higher',
+    cost: 'Free',
+    managedAccess: 'Access request workflow',
+    humanData: 'Anonymised only',
+    embargo: true, peerReview: true,
+    licences: '400+ open licences (opendefinition.org, spdx.org)',
+    metadata: 'DataCite',
+    preservation: 'CERN Tape Archive; long-term by CERN',
+    businessModel: 'CERN IGO (non-profit)',
+    makeDataCount: true,
+    curation: 'Community curation; automated validation',
+    researchEnv: false
+  }
+];
+
+const comparisonRows = [
+  { feature: 'Operator', key: 'operator' },
+  { feature: 'Storage limit', key: 'sizeLimit' },
+  { feature: 'Cost to researcher', key: 'cost' },
+  { feature: 'Managed access', key: 'managedAccess' },
+  { feature: 'Human subjects data', key: 'humanData' },
+  { feature: 'Make Data Count', key: 'makeDataCount', render: (v, r) => r && r.id === 'synapse' ? '🚧' : v ? '✅' : '❌' },
+  { feature: 'Licence options', key: 'licences' },
+  { feature: 'Metadata schemas', key: 'metadata' },
+  { feature: 'Preservation strategy', key: 'preservation' },
+  { feature: 'Business model', key: 'businessModel' },
+  { feature: 'Curation services', key: 'curation' },
+  { feature: 'Research environment', key: 'researchEnv', render: v => v ? '<span class="cell-yes">Yes</span>' : '<span class="cell-no">No</span>' }
+];
+
+function showView(view, btn) {
+  document.getElementById('view-flowchart').style.display = view === 'flowchart' ? 'block' : 'none';
+  document.getElementById('view-repositories').style.display = view === 'repositories' ? 'block' : 'none';
+  document.getElementById('view-features').style.display = view === 'features' ? 'block' : 'none';
+
+  document.querySelectorAll('#nav-controls button').forEach(b => b.classList.remove('active'));
+  if (btn) btn.classList.add('active');
+  else {
+    const buttons = document.querySelectorAll('#nav-controls button');
+    const idx = { flowchart: 0, repositories: 1, features: 3 }[view];
+    if (idx !== undefined && buttons[idx]) buttons[idx].classList.add('active');
+  }
+
+  if (view === 'repositories') renderRepoComparison();
+  if (view === 'features') renderFeaturesTable();
+}
+
+function goToRepo(repoId) {
+  showView('repositories');
+  renderRepoComparison();
+  setTimeout(() => {
+    const idx = repos.findIndex(r => r.id === repoId);
+    if (idx >= 0) {
+      const table = document.getElementById('repo-comparison-table');
+      const cols = table.querySelectorAll('thead th');
+      cols.forEach((col, i) => {
+        col.style.transition = 'box-shadow 0.3s';
+        col.style.boxShadow = i === idx + 1 ? '0 0 0 3px ' + repos[idx].colour + ' inset' : '';
+      });
+      const rows = table.querySelectorAll('tbody tr');
+      rows.forEach(row => {
+        const cells = row.querySelectorAll('td');
+        cells.forEach((cell, i) => {
+          cell.style.transition = 'background 0.3s';
+          cell.style.background = i === idx + 1 ? '#fffde7' : '';
+        });
+      });
+      if (cols[idx + 1]) cols[idx + 1].scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+      setTimeout(() => {
+        cols.forEach(col => col.style.boxShadow = '');
+        rows.forEach(row => row.querySelectorAll('td').forEach(cell => cell.style.background = ''));
+      }, 4000);
+    }
+  }, 100);
+}
+
+function toggleDetail(el) {
+  const panel = el.querySelector('.detail-panel');
+  if (panel) panel.classList.toggle('open');
+}
+
+document.addEventListener('mouseover', function(e) {
+  const node = e.target.closest('[data-tooltip]');
+  if (node) {
+    const tooltip = document.getElementById('tooltip');
+    tooltip.textContent = node.dataset.tooltip;
+    const rect = node.getBoundingClientRect();
+    tooltip.style.left = rect.left + rect.width / 2 - 125 + 'px';
+    tooltip.style.top = rect.top - 10 + window.scrollY + 'px';
+    tooltip.style.transform = 'translateY(-100%)';
+    tooltip.classList.add('visible');
+  }
+});
+document.addEventListener('mouseout', function(e) {
+  if (e.target.closest('[data-tooltip]')) document.getElementById('tooltip').classList.remove('visible');
+});
+
+let repoComparisonRendered = false;
+function renderRepoComparison() {
+  if (repoComparisonRendered) return;
+  repoComparisonRendered = true;
+
+  const thead = document.getElementById('repo-comparison-thead');
+  let headerRow = '<tr style="background:#2c3e50"><th style="padding:0.75rem;text-align:left;background:#2c3e50;color:white">Feature</th>';
+  repos.forEach(r => {
+    headerRow += `<th style="padding:0.75rem;background:${r.colour}"><a href="${r.url}" target="_blank" rel="noopener">${r.name}</a><small>${r.code}</small></th>`;
+  });
+  headerRow += '</tr>';
+  thead.innerHTML = headerRow;
+
+  const tbody = document.getElementById('repo-comparison-tbody');
+  comparisonRows.forEach((row, ri) => {
+    const values = repos.map(r => row.render ? row.render(r[row.key], r) : r[row.key]);
+    const uniqueVals = new Set(values.map(v => typeof v === 'string' ? v.toLowerCase() : String(v)));
+    const allSame = uniqueVals.size === 1;
+
+    let tr = `<tr><td>${row.feature}</td>`;
+    values.forEach(v => {
+      const cls = allSame ? 'cell-same' : 'cell-diff';
+      tr += `<td class="${cls}">${v}</td>`;
+    });
+    tr += '</tr>';
+    tbody.innerHTML += tr;
+  });
+}
+
+let featuresTableRendered = false;
+function renderFeaturesTable() {
+  if (featuresTableRendered) return;
+  featuresTableRendered = true;
+
+  const tbody = document.getElementById('features-dt-body');
+  comparisonRows.forEach(row => {
+    let tr = `<tr><td>${row.feature}</td>`;
+    repos.forEach(r => {
+      const val = row.render ? row.render(r[row.key], r) : r[row.key];
+      tr += `<td>${val}</td>`;
+    });
+    tr += '</tr>';
+    tbody.innerHTML += tr;
+  });
+
+  $(document).ready(function() {
+    $('#features-datatable').DataTable({
+      paging: false,
+      info: false,
+      scrollX: false,
+      order: [],
+      language: { search: 'Filter features:' }
+    });
+  });
+}
+
+// ============================
+// Interactive Wizard
+// ============================
+const wizardSteps = [
+  {
+    title: 'Discipline-Specific Repository',
+    question: 'Is there a designated or discipline-specific repository recommended for your data type?',
+    colour: '#2c3e50',
+    options: [
+      { text: 'Yes, there is', action: 'result', result: 'Use your discipline-specific repository (e.g., GenBank, PDB, dbGaP). This is the preferred path under NIH policy.', repos: [] },
+      { text: 'No, I need a generalist repository', action: 'next' },
+      { text: 'I am not sure', action: 'next' }
+    ]
+  },
+  {
+    title: 'Institutional Repository',
+    question: 'Does your institution have its own data repository, or a membership with a generalist repository?',
+    colour: '#2980b9',
+    options: [
+      { text: 'Yes, we have one', action: 'result', result: 'Use your institution\'s repository. Verify it meets NIH DMS Policy requirements for persistent identifiers, metadata, and access.', repos: [] },
+      { text: 'No', action: 'next' },
+      { text: 'I am not sure', action: 'next' }
+    ]
+  },
+  {
+    title: 'Sensitive Data',
+    question: 'Does your dataset contain human subjects, clinical trial, PHI, or PII data?',
+    colour: '#e74c3c',
+    options: [
+      { text: 'Yes, it contains sensitive data', action: 'next', filter: 'sensitive' },
+      { text: 'No', action: 'next', filter: 'nonsensitive' }
+    ]
+  },
+  {
+    title: 'Managed Access',
+    question: 'Does your data require managed (restricted) access controls?',
+    colour: '#f39c12',
+    options: [
+      { text: 'Yes, managed access is needed', action: 'next', filter: 'managed' },
+      { text: 'Embargo only (pre-publication)', action: 'next', filter: 'embargo' },
+      { text: 'No, fully open access', action: 'next', filter: 'open' }
+    ]
+  },
+  {
+    title: 'Storage Requirements',
+    question: 'How large is your dataset?',
+    colour: '#d35400',
+    options: [
+      { text: 'Less than 10 GB', action: 'next', filter: 'small' },
+      { text: '10 GB to 100 GB', action: 'next', filter: 'medium' },
+      { text: '100 GB to 1 TB', action: 'next', filter: 'large' },
+      { text: 'More than 1 TB', action: 'next', filter: 'xlarge' }
+    ]
+  },
+  {
+    title: 'Cost Preference',
+    question: 'Are you able to pay for data deposit and storage services?',
+    colour: '#7d3c98',
+    options: [
+      { text: 'Must be free', action: 'next', filter: 'free' },
+      { text: 'Budget available', action: 'next', filter: 'paid' },
+      { text: 'Institutional membership covers it', action: 'next', filter: 'member' }
+    ]
+  },
+  {
+    title: 'Curation Support',
+    question: 'What level of curation support do you need?',
+    colour: '#16a085',
+    options: [
+      { text: 'Self-service deposit is fine', action: 'recommend' },
+      { text: 'I want deposit moderation', action: 'recommend' },
+      { text: 'I need full curation services', action: 'recommend' }
+    ]
+  }
+];
+
+let wizardState = { step: 0, filters: {}, history: [], answers: [] };
+
+function startWizard() {
+  wizardState = { step: 0, filters: {}, history: [], answers: [] };
+  document.getElementById('wizard-overlay').classList.add('active');
+  renderWizardStep();
+}
+
+function closeWizard() {
+  document.getElementById('wizard-overlay').classList.remove('active');
+}
+
+function wizardBack() {
+  if (wizardState.history.length > 0) {
+    const prev = wizardState.history.pop();
+    wizardState.step = prev.step;
+    wizardState.filters = { ...prev.filters };
+    wizardState.answers = [...prev.answers];
+    renderWizardStep();
+  }
+}
+
+function renderWizardStep() {
+  const step = wizardSteps[wizardState.step];
+  document.getElementById('wizard-header').style.background = step.colour;
+  document.getElementById('wizard-title').textContent = step.title;
+  document.getElementById('wizard-step').textContent = `Step ${wizardState.step + 1} of ${wizardSteps.length}`;
+  document.getElementById('wizard-question').textContent = step.question;
+  document.getElementById('wizard-answers-container').innerHTML = '';
+
+  const actions = document.getElementById('wizard-actions');
+  actions.innerHTML = '';
+  step.options.forEach(opt => {
+    const btn = document.createElement('button');
+    btn.textContent = opt.text;
+    if (opt.text.toLowerCase().includes('yes')) btn.className = 'btn-yes';
+    if (opt.text.toLowerCase().startsWith('no')) btn.className = 'btn-no';
+    btn.onclick = () => handleWizardChoice(opt);
+    actions.appendChild(btn);
+  });
+}
+
+function handleWizardChoice(option) {
+  const step = wizardSteps[wizardState.step];
+
+  wizardState.history.push({
+    step: wizardState.step,
+    filters: { ...wizardState.filters },
+    answers: [...wizardState.answers]
+  });
+
+  wizardState.answers.push({ question: step.title, answer: option.text });
+
+  if (option.filter) {
+    wizardState.filters[step.title] = option.filter;
+  }
+
+  if (option.action === 'result') {
+    showWizardResult(option.result, option.repos);
+  } else if (option.action === 'recommend') {
+    const recommended = calculateRecommendation();
+    showWizardResult('Based on your requirements, the following repositories are recommended:', recommended);
+  } else {
+    wizardState.step++;
+    renderWizardStep();
+  }
+}
+
+function calculateRecommendation() {
+  let candidates = [...repos];
+  const f = wizardState.filters;
+
+  if (f['Sensitive Data'] === 'sensitive') {
+    candidates = candidates.filter(r => r.managedAccess !== 'None (CC0, public only)');
+    candidates.sort((a, b) => {
+      const aHuman = a.humanData !== 'Not supported' ? 1 : 0;
+      const bHuman = b.humanData !== 'Not supported' ? 1 : 0;
+      return bHuman - aHuman;
+    });
+  }
+
+  if (f['Managed Access'] === 'managed') {
+    candidates = candidates.filter(r => r.managedAccess !== 'None (CC0, public only)');
+  }
+
+  if (f['Storage Requirements'] === 'xlarge') {
+    candidates = candidates.filter(r => ['synapse', 'figshare', 'vivli', 'dryad'].includes(r.id));
+  } else if (f['Storage Requirements'] === 'large') {
+    candidates = candidates.filter(r => !['mendeley'].includes(r.id));
+  }
+
+  if (f['Cost Preference'] === 'free') {
+    candidates = candidates.filter(r => !r.cost.includes('$4k'));
+  }
+
+  return candidates.slice(0, 5).map(r => r.id);
+}
+
+function showWizardResult(message, repoIds) {
+  document.getElementById('wizard-header').style.background = '#27ae60';
+  document.getElementById('wizard-title').textContent = 'Recommendation';
+  document.getElementById('wizard-step').textContent = 'Complete';
+  document.getElementById('wizard-question').textContent = message;
+
+  const actions = document.getElementById('wizard-actions');
+  actions.innerHTML = '';
+
+  if (repoIds && repoIds.length > 0) {
+    repoIds.forEach(id => {
+      const repo = repos.find(r => r.id === id);
+      if (repo) {
+        const tag = document.createElement('button');
+        tag.textContent = `${repo.name} (${repo.code})`;
+        tag.style.borderColor = repo.colour;
+        tag.style.color = repo.colour;
+        tag.style.fontWeight = '600';
+        tag.onclick = () => { closeWizard(); goToRepo(id); };
+        actions.appendChild(tag);
+      }
+    });
+  }
+
+  const restartBtn = document.createElement('button');
+  restartBtn.textContent = 'Start Over';
+  restartBtn.style.marginTop = '0.5rem';
+  restartBtn.onclick = () => {
+    wizardState = { step: 0, filters: {}, history: [], answers: [] };
+    renderWizardStep();
+  };
+  actions.appendChild(restartBtn);
+
+  // Render answer summary
+  const container = document.getElementById('wizard-answers-container');
+  if (wizardState.answers.length > 0) {
+    let html = '<div class="wizard-answers"><h4>Your Selections</h4>';
+    wizardState.answers.forEach(a => {
+      html += `<div class="wizard-answer-row"><span class="wizard-answer-q">${a.question}</span><span class="wizard-answer-a">${a.answer}</span></div>`;
+    });
+    html += '</div>';
+    container.innerHTML = html;
+  }
+}
+</script>
+
+</body>
+</html>
